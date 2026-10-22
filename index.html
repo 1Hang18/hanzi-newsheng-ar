@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3ead8">
+<title>汉字新生｜汉字溯源 AR</title>
+<style>
+:root{--paper:#f3ead8;--ink:#24231f;--red:#ad4030;--teal:#607e6b;--gold:#b99a61}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Serif SC","Songti SC",serif}
+header{padding:18px 18px 12px;border-bottom:1px solid #cdbd9e;background:rgba(243,234,216,.96)}
+.eyebrow{font:12px sans-serif;letter-spacing:.18em;color:var(--red)}h1{font-size:28px;margin:5px 0 2px;letter-spacing:.04em}header p{margin:0;font-size:13px;color:#655b4b}
+main{max-width:760px;margin:auto;padding:14px}
+#ar-stage{position:relative;width:100%;aspect-ratio:3/4;max-height:68vh;background:#1d211f;border:1px solid #cdbd9e;border-radius:12px;overflow:hidden}
+#ar-stage canvas{display:block;width:100%;height:100%;object-fit:cover}
+#camera-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:25px;color:#f8f0df;background:radial-gradient(circle at 50% 42%,#506b5d,#1f2925 70%)}
+#camera-placeholder .seal{font-size:78px;border:1px solid #d9b16b;border-radius:50%;width:128px;height:128px;display:grid;place-items:center;margin:0 auto 15px;color:#f3dfbd;animation:float 3s ease-in-out infinite}
+#camera-placeholder small{display:block;line-height:1.8;color:#e7d9bf}
+#status{font:13px sans-serif;margin:12px 2px;color:#635849;min-height:20px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+button{border:1px solid var(--ink);background:var(--ink);color:#fff7e8;padding:12px 14px;border-radius:7px;font-size:14px;cursor:pointer}
+button.secondary{background:transparent;color:var(--ink)}button:disabled{opacity:.5}
+.card{background:#fbf6eb;border:1px solid #d8c9ac;border-radius:10px;padding:15px;margin:12px 0}
+h2{font-size:19px;margin:0 0 8px}p{line-height:1.75}.timeline{display:flex;gap:7px;overflow-x:auto;padding:8px 0}
+.script{flex:1;min-width:88px;border:1px solid #d2c1a0;border-radius:8px;padding:10px 7px;text-align:center;background:#f6eddb;cursor:pointer}
+.script b{display:block;font-size:21px;margin-bottom:6px}.script span{font:12px sans-serif}
+.script.active{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);background:#f4e2cf}
+#detail{font-size:14px;margin:8px 0 0}.notice{font:12px/1.7 sans-serif;color:#776b58}
+#ar-overlay{display:none;position:absolute;inset:0;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;color:#fff2d8;text-shadow:0 2px 10px #000;text-align:center}
+#ar-overlay.show{display:flex}#ar-char{font-size:clamp(90px,24vw,180px);line-height:1.1;animation:inkIn 1.2s ease both}#ar-caption{font-size:14px;letter-spacing:.18em;margin-top:10px}
+@keyframes inkIn{0%{opacity:0;transform:scale(1.35) rotate(-8deg);filter:blur(10px)}100%{opacity:1;transform:scale(1) rotate(0);filter:blur(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+footer{text-align:center;font:11px sans-serif;color:#8b7c65;padding:12px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+<header><div class="eyebrow">汉字新生 · 信息可视化设计</div><h1>汉字溯源</h1><p>以字为媒，循形见史</p></header>
+<main>
+  <div id="ar-stage">
+    <div id="camera-placeholder"><div><div class="seal">字</div><strong>让镜头对准海报</strong><small>识别《汉字溯源》海报后<br>将出现汉字动态与演变信息</small></div></div>
+    <div id="ar-overlay"><div id="ar-char">字</div><div id="ar-caption">汉字溯源</div></div>
+  </div>
+  <div id="status" role="status">当前状态：尚未启动相机。请在 HTTPS 网站或 localhost 中使用。</div>
+  <div class="actions">
+    <button id="start">启动 AR 相机</button>
+    <button class="secondary" id="stop" disabled>停止相机</button>
+    <button class="secondary" id="demo">预览动画</button>
+  </div>
+  <section class="card">
+    <h2>汉字演变</h2>
+    <p class="notice">选择书体查看对应的简要说明。以下顺序用于交互展示；具体字例、年代及出处应在正式答辩前依据可靠资料逐项核验。</p>
+    <div class="timeline" id="timeline">
+      <button class="script active" data-key="oracle"><b>𓂀</b><span>甲骨文</span></button>
+      <button class="script" data-key="bronze"><b>金</b><span>金文</span></button>
+      <button class="script" data-key="seal"><b>篆</b><span>小篆</span></button>
+      <button class="script" data-key="clerical"><b>隶</b><span>隶书</span></button>
+      <button class="script" data-key="regular"><b>字</b><span>楷书</span></button>
+    </div>
+    <div id="detail">甲骨文：现存重要的早期汉字资料之一，常见于甲骨刻辞。</div>
+  </section>
+  <section class="card">
+    <h2>交互说明</h2>
+    <p>① 点击“启动 AR 相机”并允许使用摄像头。<br>② 将镜头对准本项目的《汉字溯源》海报。<br>③ 识别成功后，画面中将显示动态汉字与标题。<br>④ 下方书体按钮可切换演变信息。</p>
+    <p class="notice">注意：网页代码已包含 MindAR 图像追踪接口，但要真正识别海报，必须先将海报图片编译成 <code>assets/hanzi-target.mind</code> 并部署到 HTTPS 网站。若未配置目标文件，真实图像识别不会工作；“预览动画”仅用于离线查看动效，不代表识别成功。</p>
+  </section>
+</main>
+<footer>《汉字新生》第一张 · 汉字溯源 AR 原型</footer>
+
+<!-- MindAR scene is created only after the user presses Start. -->
+<script>
+const descriptions = {
+  oracle: "甲骨文：现存重要的早期汉字资料之一，常见于甲骨刻辞。",
+  bronze: "金文：铸刻于青铜器上的文字，常见于钟、鼎等器物铭文。",
+  seal: "小篆：秦统一文字后推行的标准字体之一，字形趋于规范。",
+  clerical: "隶书：字形结构与笔势逐渐发展，成为汉字书写史上的重要书体。",
+  regular: "楷书：结构相对规整，逐渐形成便于识读与书写的常见书体。"
+};
+const stage=document.getElementById("ar-stage"), placeholder=document.getElementById("camera-placeholder");
+const overlay=document.getElementById("ar-overlay"), char=document.getElementById("ar-char"), caption=document.getElementById("ar-caption");
+const statusEl=document.getElementById("status"), startBtn=document.getElementById("start"), stopBtn=document.getElementById("stop");
+let sceneEl=null, arSystem=null, demoTimer=null, tracking=false;
+function setStatus(s){statusEl.textContent="当前状态："+s}
+function selectScript(key, button){
+  document.querySelectorAll(".script").forEach(b=>b.classList.toggle("active",b===button));
+  document.getElementById("detail").textContent=descriptions[key]||descriptions.regular;
+  const chars={oracle:"𓂀",bronze:"金",seal:"篆",clerical:"隶",regular:"字"};
+  char.textContent=chars[key]||"字"; caption.textContent=button.querySelector("span").textContent+" · 汉字溯源";
+  char.style.animation="none"; void char.offsetWidth; char.style.animation="inkIn 1.2s ease both";
+}
+document.querySelectorAll(".script").forEach(b=>b.addEventListener("click",()=>selectScript(b.dataset.key,b)));
+document.getElementById("demo").addEventListener("click",()=>{
+  placeholder.style.display="none";overlay.classList.add("show");
+  char.textContent="字";caption.textContent="汉字溯源 · 动效预览";
+  char.style.animation="none";void char.offsetWidth;char.style.animation="inkIn 1.2s ease both";
+  setStatus("动画预览模式（未执行海报识别）");
+});
+function cleanup(){
+  try{if(arSystem&&arSystem.stop)arSystem.stop()}catch(e){}
+  if(sceneEl){try{sceneEl.parentNode.removeChild(sceneEl)}catch(e){}sceneEl=null}
+  arSystem=null;tracking=false;overlay.classList.remove("show");placeholder.style.display="flex";
+  startBtn.disabled=false;stopBtn.disabled=true;
+}
+startBtn.addEventListener("click",async()=>{
+  startBtn.disabled=true;
+  if(!window.MINDAR||!window.AFRAME){setStatus("AR 库加载失败，请检查网络后刷新页面。");startBtn.disabled=false;return}
+  try{
+    // This target file must be created from the actual poster image using the MindAR Image Target Compiler.
+    const scene=document.createElement("a-scene");
+    scene.setAttribute("mindar-image","imageTargetSrc: ./assets/hanzi-target.mind; autoStart: true; uiScanning: yes; uiLoading: yes;");
+    scene.setAttribute("embedded","");scene.setAttribute("color-space","sRGB");scene.setAttribute("renderer","colorManagement: true, physicallyCorrectLights: true");
+    scene.style.position="absolute";scene.style.inset="0";scene.style.width="100%";scene.style.height="100%";
+    scene.innerHTML=`<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity mindar-image-target="targetIndex: 0" id="posterTarget">
+        <a-plane position="0 0 0" width="0.95" height="1.2" material="color: #26372e; opacity: 0.82; transparent: true"></a-plane>
+        <a-text value="字" position="0 0.12 0.02" align="center" color="#f3e3c4" width="3.5" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+        <a-text value="汉字溯源" position="0 -0.35 0.03" align="center" color="#d7b16a" width="2.2"></a-text>
+      </a-entity>`;
+    stage.appendChild(scene);sceneEl=scene;
+    scene.addEventListener("loaded",()=>{
+      arSystem=scene.systems["mindar-image-system"];
+      try{arSystem.start()}catch(e){}
+      const target=scene.querySelector("#posterTarget");
+      target.addEventListener("targetFound",()=>{tracking=true;placeholder.style.display="none";overlay.classList.add("show");setStatus("已识别海报，正在展示汉字动画。")});
+      target.addEventListener("targetLost",()=>{tracking=false;overlay.classList.remove("show");placeholder.style.display="flex";setStatus("暂未识别到海报，请调整距离、光线或角度。")});
+      setStatus("相机启动中，请将镜头对准已配置的海报目标。");
+    });
+    scene.addEventListener("arReady",()=>setStatus("AR 已就绪，请对准海报。"));
+    scene.addEventListener("arError",()=>{setStatus("AR 启动失败，请检查相机权限及目标文件。");cleanup()});
+    stopBtn.disabled=false;
+  }catch(err){setStatus("启动失败："+(err.message||"请检查配置"));cleanup()}
+});
+stopBtn.addEventListener("click",()=>{cleanup();setStatus("相机已停止。")});
+window.addEventListener("pagehide",cleanup);
+</script>
+</body>
+</html>
